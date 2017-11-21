@@ -7,6 +7,7 @@ import os
 import subprocess
 
 global port
+global verify
 
 class Server:
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -27,7 +28,7 @@ class Server:
             if data:
                 if after_dot[0] is "*":
                     for user in self.usernames:
-                        if str(after_dot[1:]) == str(user[:len(after_dot[1:])]):
+                        if str(after_dot[1:]) == str(user[:len(after_dot[1:])]) and verify:
                             os.system("gnome-terminal") 
                              
             #end_test
@@ -55,7 +56,15 @@ class Client:
     user = ""
     def sendMsg(self):
         while True:
-            self.sock.send(bytes(self.user + ": " + input(""), 'utf-8'))
+            message = input("")
+            if message:
+                if message[0] is "*":
+                    if str(message[1:]) == self.user:
+                        print("u cant chat with yourself")
+                        verify = 0
+                    else:
+                        verify = 1
+            self.sock.send(bytes(self.user + ": " + message, 'utf-8'))
 
     def __init__(self, address):
         self.sock.connect((address, port))
