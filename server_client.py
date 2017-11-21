@@ -4,6 +4,9 @@ import sys
 import signal
 import random
 import os
+import subprocess
+
+global port
 
 class Server:
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -11,12 +14,23 @@ class Server:
     usernames = []
 
     def __init__(self):
-        self.sock.bind(('0.0.0.0', 9998))
+        self.sock.bind(('0.0.0.0', 0))
         self.sock.listen(1)
 
     def handler(self, c, a, user):
         while True:
             data = c.recv(1024)
+            #test [bugs: se for a mesma pessoa q mandou a msg]
+            data_str = str(data, 'utf-8')
+            after_dot = data_str[data_str.index(":")+2:]
+
+            if data:
+                if after_dot[0] is "*":
+                    for user in self.usernames:
+                        if str(after_dot[1:]) == str(user[:len(after_dot[1:])]):
+                            os.system("gnome-terminal") 
+                             
+            #end_test
             for connection in self.connections:
                 if(connection is not c):
                     connection.send(data)
@@ -44,7 +58,7 @@ class Client:
             self.sock.send(bytes(self.user + ": " + input(""), 'utf-8'))
 
     def __init__(self, address):
-        self.sock.connect((address, 9998))
+        self.sock.connect((address, port))
         print("connected\n")
         self.user = input("username: ")
         self.sock.send(bytes(self.user, 'utf-8'))
@@ -64,9 +78,15 @@ def signal_handler(signal, frame):
 
 if (len(sys.argv) > 1):
     signal.signal(signal.SIGINT, signal_handler)
+    #os.system("lsof -Pn -i4 | grep TCP > temp")    
+    #s = open("temp","r").read()
+    #os.remove("temp")
+    s = str(subprocess.getoutput("lsof -Pn -i4 | grep TCP"))
+    port = int(s[s.index(":")+1:s.index("(")-1])
+       
     client = Client(sys.argv[1])
 else:
     signal.signal(signal.SIGINT, signal_handler)
-    os.system("x-terminal-emulator -e /bin/bash")
+    #os.system("x-terminal-emulator -e /bin/bash")
     server = Server()
     server.run()
