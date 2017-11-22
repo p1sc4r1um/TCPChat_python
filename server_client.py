@@ -91,7 +91,7 @@ if (len(sys.argv) > 1):
     #s = open("temp","r").read()
     #os.remove("temp")
     s = str(subprocess.getoutput("lsof -Pn -i4 | grep TCP"))
-    port = int(s[s.index(":")+1:s.index("(")-1])
+    port = int(s[s.rfind(":")+1:s.rfind("(")-1])
        
     client = Client(sys.argv[1])
 else:
