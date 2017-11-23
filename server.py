@@ -11,7 +11,7 @@ global verify
 
 
 ####BUGS: users shouldn't have ":", "*",  #####
-
+#when * only some users work (?????) 
 
 class Server:
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -25,7 +25,7 @@ class Server:
     def handler(self, c, a, user):
         while True:
             data = c.recv(1024)
-            print(data)
+
 
 
             data_str = str(data, 'utf-8')
@@ -33,12 +33,15 @@ class Server:
 
             if data:
                 verify = data_str[0]
-                if after_dot[0] is "*":
+                if after_dot[0] is "*" and len(after_dot) > 1:
                     for user in self.usernames:
-                        if str(after_dot[1:]) == str(user[:len(after_dot[1:])]) and verify == '1':
+            
+                        if str(after_dot[1:]) == str(user) and verify == '1':
                             c.send(bytes('1', 'utf-8'))
                         else:
                             c.send(bytes('0', 'utf-8'))
+                if after_dot[0] is "*" and len(after_dot) == 1:
+                    c.send(bytes(str(self.usernames), 'utf-8'))
                 else:
                     for connection in self.connections:
                         if(connection is not c):

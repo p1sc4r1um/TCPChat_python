@@ -18,21 +18,13 @@ class Client:
             message = input("")
             verify = 0
             if message:
-                if message[0] is "*":
+                if message[0] is "*" and len(message) > 1:
                     if str(message[1:]) == self.user:
                         print("u cant chat with yourself")
                         verify = 0
                     else:
                         verify = 1
-                    self.sock.send(bytes(str(verify) + self.user + ": " + message, 'utf-8'))
-                    b = self.sock.recv(1024)
-                    if(str(b, 'utf-8') == '1'):
-                        print('allah uh akbar')
-                        os.system("gnome-terminal")
-
-                else:
-                    self.sock.send(bytes(str(verify) + self.user + ": " + message, 'utf-8'))
-
+                self.sock.send(bytes(str(verify) + self.user + ": " + message, 'utf-8'))
 
     def __init__(self, address):
         self.sock.connect((address, port))
@@ -49,7 +41,13 @@ class Client:
             if not data:
                 break
             else:
-                print(str(data, 'utf-8')[1:])
+                print(str(data, 'utf-8')[0])
+                if str(data, 'utf-8')[0] == "1":
+                    os.system("gnome-terminal")
+                elif str(data, 'utf-8')[0] == "0": 
+                    pass
+                else:
+                    print(str(data, 'utf-8')[1:])
 
 def signal_handler(signal, frame):
     print('Good bye!')
