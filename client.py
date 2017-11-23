@@ -24,7 +24,15 @@ class Client:
                         verify = 0
                     else:
                         verify = 1
-            self.sock.send(bytes(str(verify) + self.user + ": " + message, 'utf-8'))
+                    self.sock.send(bytes(str(verify) + self.user + ": " + message, 'utf-8'))
+                    b = self.sock.recv(1024)
+                    if(str(b, 'utf-8') == '1'):
+                        print('allah uh akbar')
+                        os.system("gnome-terminal")
+
+                else:
+                    self.sock.send(bytes(str(verify) + self.user + ": " + message, 'utf-8'))
+
 
     def __init__(self, address):
         self.sock.connect((address, port))

@@ -10,7 +10,7 @@ global port
 global verify
 
 
-####BUGS:#####
+####BUGS: users shouldn't have ":", "*",  #####
 
 
 class Server:
@@ -25,14 +25,8 @@ class Server:
     def handler(self, c, a, user):
         while True:
             data = c.recv(1024)
-            for connection in self.connections:
-                if(connection is not c):
-                    connection.send(data)
-            if not data:
-                print(user + " disconnected")
-                self.connections.remove(c);
-                c.close();
-                break
+            print(data)
+
 
             data_str = str(data, 'utf-8')
             after_dot = data_str[data_str.index(":")+2:]
@@ -42,8 +36,18 @@ class Server:
                 if after_dot[0] is "*":
                     for user in self.usernames:
                         if str(after_dot[1:]) == str(user[:len(after_dot[1:])]) and verify == '1':
-                            os.system("gnome-terminal")
-                            os.system("echo ola")
+                            c.send(bytes('1', 'utf-8'))
+                        else:
+                            c.send(bytes('0', 'utf-8'))
+                else:
+                    for connection in self.connections:
+                        if(connection is not c):
+                            connection.send(data)
+            else:
+                print(user + " disconnected")
+                self.connections.remove(c);
+                c.close();
+                break
 
     def run(self):
         while True:
