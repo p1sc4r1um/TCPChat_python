@@ -18,6 +18,7 @@ class Server:
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     connections = []
     usernames = []
+    groups = {}
 
     def __init__(self):
         self.sock.bind(('0.0.0.0', 0))
@@ -52,6 +53,7 @@ class Server:
                                     break
 
                     if verify_user == 1:
+                        self.groups[group_name] = wanted_connections
                         cThread = threading.Thread(target=self.generatePrivateChat, args = (wanted_connections,))
                         cThread.daemon = True
                         cThread.start()
