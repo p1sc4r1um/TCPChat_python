@@ -11,13 +11,8 @@ global verify
 global user_connection
 user_connection = []
 
-### temporary pass as argument (generate private chat)
-global wanted_connections
-wanted_connections = []
-
-#global group_name
 ####BUGS: users shouldn't have ":", "*",  #####
-#when * only some users work (?????) 
+#when * only some users work (?????)
 
 class Server:
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -44,11 +39,12 @@ class Server:
                     #for user in self.usernames:
                     print(group_name)
                     if verify == "1":
+                        wanted_connections = []
                         for name in after_dot:
                             #if name == str(user) and verify == '1':
                             #c.send(bytes('1', 'utf-8'))
                              #   verify_user = 1
-                            
+
                             for current in user_connection:
                                 if current[0] == name:
                                     wanted_connections.append(current[1])
@@ -56,7 +52,7 @@ class Server:
                                     break
 
                     if verify_user == 1:
-                        cThread = threading.Thread(target=self.generatePrivateChat)
+                        cThread = threading.Thread(target=self.generatePrivateChat, args = (wanted_connections,))
                         cThread.daemon = True
                         cThread.start()
 
@@ -87,7 +83,7 @@ class Server:
             if user in s:
                 c.send(bytes(" welcome back, "+ user +"!!\n",'utf-8'))
                 print(user + " connected")
-                        
+
             else:
                 c.send(bytes(" welcome to IRCHAT, "+ user +"!!\n",'utf-8'))
                 #open("temp","a").write(pair_user_a+"\n")
@@ -99,8 +95,8 @@ class Server:
             cThread.daemon = True
             cThread.start()
             self.usernames.append(user)
-    
-    def generatePrivateChat(self):
+
+    def generatePrivateChat(self, wanted_connections):
         #user_connection[0][1].send(bytes(" ola","utf-8"))
         for connection in wanted_connections:
             connection.send(bytes(" "+str(group_name) +" -> ola","utf-8"))
