@@ -11,8 +11,11 @@ global verify
 global user_connection
 user_connection = []
 
+### temporary pass as argument (generate private chat)
 global wanted_connections
 wanted_connections = []
+
+#global group_name
 ####BUGS: users shouldn't have ":", "*",  #####
 #when * only some users work (?????) 
 
@@ -35,8 +38,11 @@ class Server:
                 verify = data_str[0]
                 verify_user = 0
                 if after_dot[0] is "*" and len(after_dot) > 1:
-                    after_dot = after_dot[1:].split(",")
+                    global group_name
+                    group_name = after_dot[after_dot.index('->')+3:]
+                    after_dot = after_dot[1:after_dot.index('->')-1].split(",")
                     #for user in self.usernames:
+                    print(group_name)
                     if verify == "1":
                         for name in after_dot:
                             #if name == str(user) and verify == '1':
@@ -96,9 +102,8 @@ class Server:
     
     def generatePrivateChat(self):
         #user_connection[0][1].send(bytes(" ola","utf-8"))
-        print(wanted_connections)
         for connection in wanted_connections:
-            connection.send(bytes(" ola","utf-8"))
+            connection.send(bytes(" "+str(group_name) +" -> ola","utf-8"))
 
 
 def signal_handler(signal, frame):
