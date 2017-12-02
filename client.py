@@ -19,11 +19,15 @@ class Client:
             verify = 0
             if message:
                 if message[0] is "*" and len(message) > 1:
-                    if str(message[1:]) == self.user:
-                        print("u cant chat with yourself")
-                        verify = 0
-                    else:
-                        verify = 1
+                    split = message[1:].split(",")
+                    for name in split:
+                        if name == self.user:
+                            print("u cant chat with yourself")
+                            verify = 0
+                            break
+                        else:
+                            verify = 1
+                print(verify)
                 self.sock.send(bytes(str(verify) + self.user + ": " + message, 'utf-8'))
 
     def __init__(self, address):
@@ -42,7 +46,8 @@ class Client:
                 break
             else:
                 if str(data, 'utf-8')[0] == "1":
-                    os.system("gnome-terminal -- 'bash -c \"python3 client.py 127.0.0.1;exec(bash)\"'")
+                    #os.system("gnome-terminal -- 'bash -c \"python3 client.py 127.0.0.1;exec(bash)\"'")
+                    pass
                 elif (str(data, 'utf-8')[0] == "0") and len(str(data, 'utf-8')) == 1:
                     pass
                 else:
