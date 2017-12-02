@@ -33,14 +33,18 @@ class Server:
 
             if data:
                 verify = data_str[0]
+                verify_user = 0
                 if after_dot[0] is "*" and len(after_dot) > 1:
                     for user in self.usernames:
             
                         if str(after_dot[1:]) == str(user) and verify == '1':
                             c.send(bytes('1', 'utf-8'))
-                        else:
-                            c.send(bytes('0', 'utf-8'))
-                if after_dot[0] is "*" and len(after_dot) == 1:
+                            verify_user = 1
+                            break
+
+                    if verify_user == 0:
+                        c.send(bytes('0', 'utf-8'))
+                elif after_dot[0] is "*" and len(after_dot) == 1:
                     c.send(bytes(str(self.usernames), 'utf-8'))
                 else:
                     for connection in self.connections:
@@ -74,12 +78,17 @@ class Server:
             cThread.daemon = True
             cThread.start()
             self.usernames.append(user)
+    
+    def generatePrivateChat(self):
+        print("cona")
 
 
 def signal_handler(signal, frame):
         print('Good bye!')
         sys.exit(0)
-
-signal.signal(signal.SIGINT, signal_handler)
-server = Server()
-server.run()
+if (len(sys.argv) != 1):
+    generatePrivateChat()
+else:
+    signal.signal(signal.SIGINT, signal_handler)
+    server = Server()
+    server.run()
