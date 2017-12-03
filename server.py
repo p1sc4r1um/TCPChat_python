@@ -11,8 +11,7 @@ global verify
 global user_connection
 user_connection = []
 
-####BUGS: users shouldn't have ":", "*",  #####
-#when * only some users work (?????)
+####BUGS: users shouldn't have ":", "@", "*"; groups dont include self person  #####
 
 class Server:
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -33,39 +32,53 @@ class Server:
             if data:
                 verify = data_str[0]
                 verify_user = 0
-                if after_dot[0] is "*" and len(after_dot) > 1:
-                    global group_name
+                print("after dot: " + str(after_dot))
+                if (after_dot[0] == "*") and (len(after_dot) > 1) and (',' in after_dot):
                     group_name = after_dot[after_dot.index('->')+3:]
                     after_dot = after_dot[1:after_dot.index('->')-1].split(",")
-                    #for user in self.usernames:
-                    print(group_name)
+                #for user in self.usernames:
                     if verify == "1":
                         wanted_connections = []
                         for name in after_dot:
-                            #if name == str(user) and verify == '1':
-                            #c.send(bytes('1', 'utf-8'))
-                             #   verify_user = 1
-
                             for current in user_connection:
                                 if current[0] == name:
                                     wanted_connections.append(current[1])
                                     verify_user = 1
                                     break
-
-                    if verify_user == 1:
-                        self.groups[group_name] = wanted_connections
-                        cThread = threading.Thread(target=self.generatePrivateChat, args = (wanted_connections,))
-                        cThread.daemon = True
-                        cThread.start()
-
-                    elif verify_user == 0:
-                        c.send(bytes('0', 'utf-8'))
-                elif after_dot[0] is "*" and len(after_dot) == 1:
+                        if verify_user == '0':
+                            c.send(bytes('0', 'utf-8'))
+                        else:
+                            for current in user_connection:
+                                if current[0] == user:
+                                    wanted_connections.append(current[1])
+                                    verify_user = 1
+                                    break
+                            self.groups[group_name] = wanted_connections
+                elif (after_dot[0] == "*") and (len(after_dot) > 1) and (',' not in after_dot):
+                    group_name2 = after_dot[1:after_dot.index(" ")]
+                    message2 = after_dot[after_dot.index(" ")+1:]
+                    print(group_name2 +" "+message2)
+                    cThread = threading.Thread(target=self.generatePrivateChat, args = (group_name2,message2, c, user))
+                    cThread.daemon = True
+                    cThread.start()
+                elif after_dot[0] is "@" and len(after_dot) == 1:
                     c.send(bytes(str(self.usernames), 'utf-8'))
+
+                elif after_dot[0] is "@" and len(after_dot) > 1:
+                    for user in self.usernames:
+
+                        if str(after_dot[1:]) == str(user) and verify == '1':
+                            c.send(bytes('1', 'utf-8'))
+                            verify_user = 1
+                            break
+
+                    if verify_user == 0:
+                        c.send(bytes('0', 'utf-8'))
+
                 else:
                     for connection in self.connections:
                         if(connection is not c):
-                            connection.send(data)
+                            connection.send(bytes(" [GLOBAL] " + data_str[1:], "utf-8"))
             else:
                 print(user + " disconnected")
                 self.connections.remove(c);
@@ -98,10 +111,11 @@ class Server:
             cThread.start()
             self.usernames.append(user)
 
-    def generatePrivateChat(self, wanted_connections):
+    def generatePrivateChat(self, group_name2, message2, c, user):
         #user_connection[0][1].send(bytes(" ola","utf-8"))
-        for connection in wanted_connections:
-            connection.send(bytes(" "+str(group_name) +" -> ola","utf-8"))
+        for connection in self.groups[group_name2]:
+            if connection is not c:
+                connection.send(bytes(" "+ user + " to " + str(group_name2) +" -> " + message2,"utf-8"))
 
 
 def signal_handler(signal, frame):

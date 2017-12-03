@@ -18,16 +18,15 @@ class Client:
             message = input("")
             verify = 0
             if message:
-                if message[0] is "*" and len(message) > 1:
+                if (message[0] is "@" or message[0] is "*") and len(message) > 1:
                     split = message[1:].split(",")
                     for name in split:
-                        if name == self.user:
+                        if name == self.user and message[0] == "@":
                             print("u cant chat with yourself")
                             verify = 0
                             break
                         else:
                             verify = 1
-                print(verify)
                 self.sock.send(bytes(str(verify) + self.user + ": " + message, 'utf-8'))
 
     def __init__(self, address):
