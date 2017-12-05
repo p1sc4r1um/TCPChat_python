@@ -5,7 +5,9 @@ import signal
 import random
 import os
 import subprocess
-
+from time import sleep
+def cls():
+    os.system('cls' if os.name == 'nt' else 'clear')
 
 global port
 global verify
@@ -21,7 +23,7 @@ class Client:
                 if (message[0] is "@" or message[0] is "*") and len(message) > 1:
                     split = message[1:].split(",")
                     for name in split:
-                        if name == self.user and message[0] == "@":
+                        if name == self.user and message[0] == "@" and (len(message) > len(name) + 1):
                             print("u cant chat with yourself")
                             verify = 0
                             break
@@ -47,11 +49,16 @@ class Client:
                 if str(data, 'utf-8')[0] == "1":
                     #os.system("gnome-terminal -- 'bash -c \"python3 client.py 127.0.0.1;exec(bash)\"'")
                     print(str(data, 'utf-8')[1:])
-                elif (str(data, 'utf-8')[0] == "0") and len(str(data, 'utf-8')) == 1:
+                elif (str(data, 'utf-8')[0] == "0") and len(str(data, 'utf-8')) < 3:
                     #print(str(data, 'utf-8')[:])
-                    pass
+                    print("user doesn't exist")
                 else:
                     print(str(data, 'utf-8')[1:])
+                    #message = str(data, 'utf-8')[1:]
+                    #for i in range(len(message), 0, -len(message)+1):
+                    #    cls()
+                    #    print(message[:i])
+                    #    sleep(1)
 
 def signal_handler(signal, frame):
     print('Good bye!')

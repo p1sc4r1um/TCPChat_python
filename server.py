@@ -5,6 +5,7 @@ import signal
 import random
 import os
 import subprocess
+import datetime
 
 global port
 global verify
@@ -18,7 +19,8 @@ class Server:
     connections = []
     usernames = []
     groups = {}
-
+    #log_file = open("log_file.txt", "a")
+    
     def __init__(self):
         self.sock.bind(('0.0.0.0', 0))
         self.sock.listen(1)
@@ -28,8 +30,10 @@ class Server:
             data = c.recv(1024)
             data_str = str(data, 'utf-8')
             after_dot = data_str[data_str.index(":")+2:]
-
             if data:
+     #           self.log_file.write("CARALHO")
+                print(data_str)
+                open("log_file.txt", "a").write(data_str + " at " +str(datetime.datetime.now()) +"\n")
                 verify = data_str[0]
                 verify_user = 0
                 print("after dot: " + str(after_dot))
@@ -66,7 +70,7 @@ class Server:
                 elif after_dot[0] is "@" and len(after_dot) == 1:
                     c.send(bytes(str(self.usernames), 'utf-8'))
 
-                elif after_dot[0] is "@" and len(after_dot) > 1:
+                elif after_dot[0] is "@" and len(after_dot) > 1 and (' ' in after_dot):
                     '''for user in self.usernames:
 
                         if str(after_dot[1:after_dot.index(" ")]) == str(user) and verify == '1':
@@ -82,6 +86,11 @@ class Server:
                     cThread = threading.Thread(target=self.dialogue, args = (data_str,after_dot))
                     cThread.daemon = True
                     cThread.start()
+                elif after_dot[0] is "@" and len(after_dot) > 1 and(' ' not in after_dot):
+                    c.send(bytes(" [hint] correct usage: @<user> <message> // @ to view users", "utf-8"))
+
+                elif after_dot[:5] == "!help":
+                    c.send(bytes(" private chat: \n\t@<user> <message> // @ to see users\nprivate group: \n\tCREATE: *<user1>,<user2>,...<usern> -> <group_name> \n\tSEND MESSAGE: *<group_name> <message>\n","utf-8"))
 
                 else:
                     for connection in self.connections:
@@ -135,6 +144,8 @@ class Server:
 
 def signal_handler(signal, frame):
         print('Good bye!')
+        #self.log_file.close()
+        #file_pairs.close()
         sys.exit(0)
 signal.signal(signal.SIGINT, signal_handler)
 server = Server()
