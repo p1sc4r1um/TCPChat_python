@@ -11,8 +11,8 @@ global verify
 global user_connection
 user_connection = []
 
-####BUGS: users shouldn't have ":", "@", "*"; groups dont include self person  #####
-
+####BUGS: users shouldn't have ":", "@", "*", " "; groups dont include self person  #####
+#TODO: timed messages, write in file, block users
 class Server:
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     connections = []
@@ -56,24 +56,32 @@ class Server:
                             self.groups[group_name] = wanted_connections
                 elif (after_dot[0] == "*") and (len(after_dot) > 1) and (',' not in after_dot):
                     group_name2 = after_dot[1:after_dot.index(" ")]
-                    message2 = after_dot[after_dot.index(" ")+1:]
-                    print(group_name2 +" "+message2)
-                    cThread = threading.Thread(target=self.generatePrivateChat, args = (group_name2,message2, c, user))
-                    cThread.daemon = True
-                    cThread.start()
+                    if(group_name2 in self.groups.keys()) and (c in self.groups[group_name2]):
+                        message2 = after_dot[after_dot.index(" ")+1:]
+                        cThread = threading.Thread(target=self.generatePrivateChat, args = (group_name2,message2, c, user))
+                        cThread.daemon = True
+                        cThread.start()
+                    else:
+                        c.send(bytes(" Group doesn't exist", "utf-8"))
                 elif after_dot[0] is "@" and len(after_dot) == 1:
                     c.send(bytes(str(self.usernames), 'utf-8'))
 
                 elif after_dot[0] is "@" and len(after_dot) > 1:
-                    for user in self.usernames:
+                    '''for user in self.usernames:
 
-                        if str(after_dot[1:]) == str(user) and verify == '1':
-                            c.send(bytes('1', 'utf-8'))
-                            verify_user = 1
+                        if str(after_dot[1:after_dot.index(" ")]) == str(user) and verify == '1':
+                            pritnf("user:")
+                            print(after_dot[1:after_dot.index(" ")])
+                            #c.send(bytes('1', 'utf-8'))
+                            self.connections[self.usernames.index(user)].send(bytes(data(:data.index(":")) + after_dot[after_dot.index(" "):], 'utf-8'))
+                            #verify_user = 1
                             break
 
-                    if verify_user == 0:
-                        c.send(bytes('0', 'utf-8'))
+                    #if verify_user == 0:
+                        #c.send(bytes('0', 'utf-8'))'''
+                    cThread = threading.Thread(target=self.dialogue, args = (data_str,after_dot))
+                    cThread.daemon = True
+                    cThread.start()
 
                 else:
                     for connection in self.connections:
@@ -117,6 +125,13 @@ class Server:
             if connection is not c:
                 connection.send(bytes(" "+ user + " to " + str(group_name2) +" -> " + message2,"utf-8"))
 
+    def dialogue(self, message2, after_dot):
+            for user in self.usernames:
+
+                if str(after_dot[1:after_dot.index(" ")]) == str(user):
+                    self.connections[self.usernames.index(user)].send(bytes(message2[:message2.index(":")+2]+ after_dot[after_dot.index(" "):], 'utf-8'))
+                    #verify_user = 1
+                    break
 
 def signal_handler(signal, frame):
         print('Good bye!')

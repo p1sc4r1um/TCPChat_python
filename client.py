@@ -46,8 +46,9 @@ class Client:
             else:
                 if str(data, 'utf-8')[0] == "1":
                     #os.system("gnome-terminal -- 'bash -c \"python3 client.py 127.0.0.1;exec(bash)\"'")
-                    pass
+                    print(str(data, 'utf-8')[1:])
                 elif (str(data, 'utf-8')[0] == "0") and len(str(data, 'utf-8')) == 1:
+                    #print(str(data, 'utf-8')[:])
                     pass
                 else:
                     print(str(data, 'utf-8')[1:])
