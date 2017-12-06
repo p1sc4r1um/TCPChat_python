@@ -49,6 +49,7 @@ class Client:
                 if str(data, 'utf-8')[0] == "1":
                     #os.system("gnome-terminal -- 'bash -c \"python3 client.py 127.0.0.1;exec(bash)\"'")
                     print(str(data, 'utf-8')[1:])
+
                 elif (str(data, 'utf-8')[0] == "0") and len(str(data, 'utf-8')) < 3:
                     #print(str(data, 'utf-8')[:])
                     print("user doesn't exist")
@@ -63,8 +64,6 @@ class Client:
 def signal_handler(signal, frame):
     print('Good bye!')
     sys.exit(0)
-
-
 
 
 if (len(sys.argv) == 2):
