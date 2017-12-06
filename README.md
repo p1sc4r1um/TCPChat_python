@@ -1,6 +1,6 @@
 # TCPChat_python
 private chat:
-@<user> <message> // @ to see users
+@ <user> <message> // @ to see users
 private group:
   CREATE: *<user1>,<user2>,...<usern> -> <group_name>
   SEND MESSAGE: *<group_name> <message>
