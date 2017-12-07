@@ -204,7 +204,13 @@ class Server:
                     if user in s:
                         c.send(bytes(" welcome back, "+ user +"!!\n",'utf-8'))
                         print(user + " connected")
-                        #update user while he was gone
+                        filenames = glob.glob("/home/IRC/" + user + "/*.txt")
+                        for f in filenames:
+                            lines = open(f, "r").readlines()
+                            if len(lines) > 0:
+                                if lines[len(lines)-1] != "////@£§£½§¬½{[{[.read until here.\n":
+                                    c.send(bytes("\n"+bcolors.RED + "you've got new messages in " + bcolors.BOLD +f[f.index(user)+len(user)+1:len(f)-4]+ bcolors.ENDC + bcolors.RED +" [type ls " + f[f.index(user)+len(user)+1:len(f)-4]+" to see]"+bcolors.ENDC+"\n",'utf-8'))
+                                    
                     else:
                         c.send(bytes(" welcome to IRCHAT, "+ user +"!!\n",'utf-8'))
                         open("users.txt","a").write(user+"\n")

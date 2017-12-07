@@ -385,3 +385,26 @@
 0oi: ls -n @ola at 2017-12-07 12:47:58.121567
 0oi: ls at 2017-12-07 12:48:52.467131
 0oi: ls ola at 2017-12-07 12:49:05.122497
+0ola: ls at 2017-12-07 13:58:49.859493
+1oi: @ola oioioioi at 2017-12-07 13:59:10.877737
+0ola: ls at 2017-12-07 13:59:15.818861
+0ola: ls @oi at 2017-12-07 13:59:22.866973
+1oi: @ola xupamos at 2017-12-07 14:00:25.392689
+1oi: @ estas offline cabraaaao at 2017-12-07 14:00:31.172383
+0ola: ls at 2017-12-07 14:01:10.873424
+0ola: ls oi at 2017-12-07 14:01:14.690516
+0ola: ls @oi at 2017-12-07 14:01:19.026582
+0ola: dfsdvasdvas at 2017-12-07 14:01:25.225476
+0ola: dvasd at 2017-12-07 14:01:25.621745
+0ola: vasdv at 2017-12-07 14:01:25.953850
+0ola: asdv at 2017-12-07 14:01:26.259347
+0ola: asd at 2017-12-07 14:01:26.609107
+0ola: ls @oi at 2017-12-07 14:15:27.966653
+0ola: ls @oi at 2017-12-07 14:15:45.540633
+1ola: @oi at 2017-12-07 14:17:38.257423
+0ola: ls @oi at 2017-12-07 14:17:52.590214
+1tremor: @jmartinhoj ola mano at 2017-12-07 14:22:12.239305
+1tremor: @jmartinhoj estas offline? at 2017-12-07 14:22:43.607743
+1tremor: @jmartinhoj xupamoz at 2017-12-07 14:25:14.355498
+1tremor: @jmartinhoj ola mano tas fixe at 2017-12-07 14:26:31.213034
+1oi: @ola oi at 2017-12-07 14:29:03.002993
