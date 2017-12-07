@@ -6,14 +6,29 @@ import random
 import os
 import subprocess
 import datetime
+import glob
 
 global port
 global verify
 global user_connection
 user_connection = []
 
-####BUGS: users shouldn't have ":", "@", "*", " "; groups dont include self person  #####
-#TODO: timed messages, write in file, block users
+####BUGs:#####
+#TODO: timed messages, write in
+#group_names cant have same name yeaeyyae
+#buguinhos
+#exit sends a motherfucking message
+
+class bcolors:
+    HEADER = '\033[95m'
+    BLUE = '\033[94m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
 class Server:
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     connections = []
@@ -21,7 +36,6 @@ class Server:
     all_usernames = []
     groups = {}
     blocked_users = {}
-    #log_file = open("log_file.txt", "a")
 
     def __init__(self):
         self.sock.bind(('0.0.0.0', 0))
@@ -30,24 +44,20 @@ class Server:
         self.all_usernames.remove("")
         for i in self.all_usernames:
             self.blocked_users[i] = []
-        #ir buscar usernames ao ficheiro (aqui ou no run??)
     def handler(self, c, a, user):
         while True:
             data = c.recv(1024)
-
             if data:
                 data_str = str(data, 'utf-8')
                 after_dot = data_str[data_str.index(":")+2:]
-     #           self.log_file.write("CARALHO")
                 print(data_str)
                 open("log_file.txt", "a").write(data_str + " at " +str(datetime.datetime.now()) +"\n")
                 verify = data_str[0]
                 verify_user = 0
-                print("after dot: " + str(after_dot))
+                print("after dot:" + str(after_dot)+"ola")
                 if (after_dot[0] == "*") and (len(after_dot) > 1) and (',' in after_dot):
                     group_name = after_dot[after_dot.index('->')+3:]
                     after_dot = after_dot[1:after_dot.index('->')-1].split(",")
-                #for user in self.active_usernames:
                     if verify == '1':
                         wanted_connections = []
                         for name in after_dot:
@@ -80,18 +90,6 @@ class Server:
                     c.send(bytes(" " + str(self.active_usernames), 'utf-8'))
 
                 elif after_dot[0] is "@" and len(after_dot) > 1 and (' ' in after_dot):
-                    '''for user in self.active_usernames:
-
-                        if str(after_dot[1:after_dot.index(" ")]) == str(user) and verify == '1':
-                            pritnf("user:")
-                            print(after_dot[1:after_dot.index(" ")])
-                            #c.send(bytes('1', 'utf-8'))
-                            self.connections[self.active_usernames.index(user)].send(bytes(data(:data.index(":")) + after_dot[after_dot.index(" "):], 'utf-8'))
-                            #verify_user = 1
-                            break
-
-                    #if verify_user == 0:
-                        #c.send(bytes('0', 'utf-8'))'''
                     if(user not in self.blocked_users[after_dot[1:after_dot.index(" ")]] and after_dot[1:after_dot.index(" ")] not in self.blocked_users[user]):
                         cThread = threading.Thread(target=self.dialogue, args = (data_str,after_dot))
                         cThread.daemon = True
@@ -103,12 +101,15 @@ class Server:
                     c.send(bytes(" [hint] correct usage: @<user> <message> // @ to view users", "utf-8"))
 
                 elif after_dot[:5] == "!help":
-                    c.send(bytes(" private chat: \n\t@<user> <message> // @ to see users\nprivate group: \n\tCREATE: *<user1>,<user2>,...<usern> -> <group_name> \n\tSEND MESSAGE: *<group_name> <message>\n\tADD USER: +<user> <group_name>\n\tREMOVE USER: -<user> <group_name>\nBANNING: ~<user_to_ban> to ban user and ~ again to unban\n","utf-8"))
+                    c.send(bytes(" private chat: \n\t@<user> <message> // @ to see users\nprivate group: \n\tCREATE: *<user1>,<user2>,...<usern> -> <group_name> \n\tSEND MESSAGE: *<group_name> <message>\n\tADD USER: +<user> <group_name>\n\tREMOVE USER: -<user> <group_name>\nbanning users: ~<user_to_ban> to ban user and ~ again to unban\nlist chats: ls to list // ls <chat_name> to see specific chat\n ","utf-8"))
                 elif after_dot[0] is "+":
                     if (after_dot.count(" ") == 1) and (after_dot[1:after_dot.index(" ")] in self.all_usernames) and (after_dot[after_dot.index(" ")+1:] in self.groups.keys()):
                         if after_dot[1:after_dot.index(" ")] not in self.groups[after_dot[after_dot.index(" ")+1:]] and after_dot[1:after_dot.index(" ")] in self.all_usernames:
                             if user in self.groups[after_dot[after_dot.index(" ")+1:]]:
                                 self.groups[after_dot[after_dot.index(" ")+1:]].append(after_dot[1:after_dot.index(" ")])
+                                cThread = threading.Thread(target=self.connectedToGroup, args = (after_dot[after_dot.index(" ")+1:],after_dot[1:after_dot.index(" ")],user))
+                                cThread.daemon = True
+                                cThread.start()
                             else:
                                 c.send(bytes(" group doesn't exist","utf-8"))
                         else:
@@ -139,12 +140,53 @@ class Server:
                             self.blocked_users[user].remove(after_dot[1:])
                     else:
                         c.send(bytes(" "+str(self.blocked_users[user]), "utf-8"))
+                elif after_dot == "ls":
+                    filenames = glob.glob("/home/IRC/"+user+"/*.txt")
+                    names = []
+                    for f in filenames:
+                        names.append(f[f.index("IRC/")+8:f.index(".txt")])
+                    c.send(bytes(" "+str(names), 'utf-8'))
+                elif after_dot[:2] == "ls" and after_dot.count(" ") == 1 and len(after_dot[3:]) > 0:
+                    filenames = glob.glob("/home/IRC/"+user+"/*.txt")
+                    names = []
+                    for f in filenames:
+                        names.append(f[f.index("IRC/")+8:f.index(".txt")])
+                    for n in names:
+                        if n == after_dot[3:]:
+                            t = open("/home/IRC/"+user+"/"+n+".txt","r").read()
+                            c.send(bytes(" "+str(t), 'utf-8'))
+                elif after_dot[:2] == "ls" and after_dot.split(" ")[1] == "-n" and len(after_dot.split(" ")) == 3:
+                    filenames = glob.glob("/home/IRC/"+user+"/*.txt")
+                    names = []
+                    boolean = 0
+                    for f in filenames:
+                        names.append(f[f.index("IRC/")+8:f.index(".txt")])
+                    for n in names:
+                        if n == after_dot.split(" ")[2]:
+                            t = open("/home/IRC/"+user+"/"+n+".txt","r").read()
+                            t.split("\n")
+                            for i in t:
+                                if t == "////@£§£½§¬½{[{[.read until here.":
+                                    boolean = 1
+                                if boolean == 1:
+                                    c.send(bytes(" " + str(i), 'utf-8'))
+                    f = open("/home/IRC/"+user+"/"+n+".txt","r")
+                    lines = f.readlines()
+                    f.close()
+                    f = open("/home/IRC/"+user+"/"+n+".txt", "w")
+                    for line in lines:
+                        if line!="////@£§£½§¬½{[{[.read until here.\n":
+                            f.write(line)
+                    f.close()
                 else:
                     for connection in self.connections:
                         #change to inactive too && see if user that sends is blocked in other users
                         if(connection is not c and self.active_usernames[self.connections.index(connection)] not in self.blocked_users[user]) and user not in self.blocked_users[self.active_usernames[self.connections.index(connection)]]:
                             connection.send(bytes(" [GLOBAL] " + data_str[1:], "utf-8"))
             else:
+                filenames = glob.glob("/home/IRC/"+ user +"/*.txt")
+                for f in filenames:
+                    open(f,"a").write("////@£§£½§¬½{[{[.read until here.\n")
                 print(user + " disconnected")
                 self.active_usernames.remove(self.active_usernames[self.connections.index(c)])
                 self.connections.remove(c);
@@ -157,7 +199,7 @@ class Server:
             user = c.recv(1024).decode('utf-8')
             file_users = open("users.txt","r").read()
             s = file_users.replace(",","\n").split("\n")
-            if user.count(" ") == 0 and user.count("*") == 0 and user.count("@") == 0 and user.count("+") == 0 and user.count("-") == 0 and user.count("~") == 0:
+            if user.count(" ") == 0 and user.count("*") == 0 and user.count("@") == 0 and user.count("+") == 0 and user.count("-") == 0 and user.count("~") == 0 and user.count(":") == 0:
                 if user not in self.active_usernames:
                     if user in s:
                         c.send(bytes(" welcome back, "+ user +"!!\n",'utf-8'))
@@ -165,16 +207,19 @@ class Server:
                         #update user while he was gone
                     else:
                         c.send(bytes(" welcome to IRCHAT, "+ user +"!!\n",'utf-8'))
-                    
                         open("users.txt","a").write(user+"\n")
                         print(user + " connected and added to database")
+                        path = "/home/IRC/"+user+"/"
+                        os.makedirs(path)
+                        open(path+user+"_GLOBAL.txt","w+")
+
                     c.send(bytes("\npress !help to see the chat's manual\n\n",'utf-8'))
                     self.connections.append(c)
                     c.send(bytes(" "+ str(len(self.active_usernames)) + ' connected clients: ' + ', '.join(self.active_usernames) +'\n', 'utf-8'))
 
                     for connection in self.connections:
                         if connection is not c:
-                            connection.send(bytes(" \n"+ user +" connected\n", 'utf-8'))
+                            connection.send(bytes(" "+ user +" connected\n", 'utf-8'))
 
                     cThread = threading.Thread(target=self.handler, args=(c, a, user))
                     cThread.daemon = True
@@ -186,21 +231,31 @@ class Server:
                     c.send(bytes(" user already connected", 'utf-8'))
                     c.close()
             else:
-                c.send(bytes(" username cannot contain special characters such as ' *@+-~'", 'utf-8'))
+                c.send(bytes(" username cannot contain special characters such as ' *@+-~:lsexit'", 'utf-8'))
                 c.close()
     def generatePrivateChat(self, group_name2, message2, c, user):
-        #user_connection[0][1].send(bytes(" ola","utf-8"))
         for connection in self.connections:
             if self.active_usernames[self.connections.index(connection)] in self.groups[group_name2]:
                 if connection is not c:
-                    connection.send(bytes(" "+ user + " to " + str(group_name2) +" -> " + message2,"utf-8"))
+                    connection.send(bytes(" "+ user + " to " + str(group_name2) +" -> " + message2,"utf-8")) 
+        for username in self.all_usernames:
+            if username in self.groups[group_name2]:
+                if username == user:
+                    open("/home/IRC/" + username + "/" + group_name2 + ".txt","a").write(message2 + "\n")
+                else:
+                    open("/home/IRC/" + username + "/" + group_name2 + ".txt","a").write(user + " to " + group_name2 + " -> "+message2 + "\n")
+    def connectedToGroup(self, group_name,user_added,user_adding):
+        for username in self.active_usernames:
+            if username in self.groups[group_name]:
+                self.connections[self.active_usernames.index(username)].send(bytes(" user "+bcolors.BOLD + user_adding + bcolors.ENDC +" added "+ bcolors.BOLD + bcolors.YELLOW  + user_added + bcolors.ENDC +" to group " + bcolors.BOLD +group_name + bcolors.ENDC, 'utf-8'))
 
     def dialogue(self, message2, after_dot):
-            for user in self.active_usernames:
-
+            for user in self.all_usernames:
                 if str(after_dot[1:after_dot.index(" ")]) == str(user):
-                    self.connections[self.active_usernames.index(user)].send(bytes(message2[:message2.index(":")+2]+ after_dot[after_dot.index(" "):], 'utf-8'))
-                    #verify_user = 1
+                    open("/home/IRC/"+user+"/@"+message2[1:message2.index(":")] + ".txt", "a").write(message2[1:message2.index(":")+2]+ after_dot[after_dot.index(" "):]+"\n")
+                    open("/home/IRC/"+message2[1:message2.index(":")]+"/@"+ user + ".txt", "a").write(after_dot[1+after_dot.index(" "):]+"\n")
+                    if(user in self.active_usernames):
+                        self.connections[self.active_usernames.index(user)].send(bytes(message2[:message2.index(":")+2]+ after_dot[after_dot.index(" "):], 'utf-8'))
                     break
 
 def signal_handler(signal, frame):
