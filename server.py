@@ -220,12 +220,16 @@ class Server:
                         open(path+user+"_GLOBAL.txt","w+")
 
                     c.send(bytes("\npress !help to see the chat's manual\n\n",'utf-8'))
+                    open(user+"_tmp.txt", "a").write("\npress !help to see the chat's manual\n\n")
                     self.connections.append(c)
                     c.send(bytes(" "+ str(len(self.active_usernames)) + ' connected clients: ' + ', '.join(self.active_usernames) +'\n', 'utf-8'))
+                     open(user+"_tmp.txt", "a").write(" "+ str(len(self.active_usernames)) + ' connected clients: ' + ', '.join(self.active_usernames) +'\n')
 
+                    
                     for connection in self.connections:
                         if connection is not c:
                             connection.send(bytes(" "+ user +" connected\n", 'utf-8'))
+                            open(self.active_usernames[self.connections.index(connection)]+"_tmp.txt").write(" "+ user +" connected\n")
 
                     cThread = threading.Thread(target=self.handler, args=(c, a, user))
                     cThread.daemon = True
@@ -235,6 +239,7 @@ class Server:
                     self.blocked_users[user] = []
                 else:
                     c.send(bytes(" user already connected", 'utf-8'))
+                    open(user+"_tmp.txt", "a").write(
                     c.close()
             else:
                 c.send(bytes(" username cannot contain special characters such as ' *@+-~:lsexit'", 'utf-8'))
