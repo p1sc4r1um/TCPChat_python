@@ -18,7 +18,7 @@ user_connection = []
 #group_names cant have same name yeaeyyae
 #buguinhos
 #exit sends a motherfucking message
-
+#save blocked list
 class bcolors:
     HEADER = '\033[95m'
     BLUE = '\033[94m'
@@ -55,7 +55,7 @@ class Server:
                 verify = data_str[0]
                 verify_user = 0
                 print("after dot:" + str(after_dot)+"ola")
-                if (after_dot[0] == "*") and (len(after_dot) > 1) and (',' in after_dot):
+                if (after_dot[0] == "*") and (len(after_dot) > 1) and (',' in after_dot) and after_dot.count("->") == 1 and len(after_dot[after_dot.index("->")+3:]) > 2:
                     group_name = after_dot[after_dot.index('->')+3:]
                     after_dot = after_dot[1:after_dot.index('->')-1].split(",")
                     if verify == '1':
@@ -77,7 +77,7 @@ class Server:
                             self.groups[group_name] = wanted_connections
                             self.groups[group_name].append(user)
                             print(self.groups)
-                elif (after_dot[0] == "*") and (len(after_dot) > 1) and (',' not in after_dot):
+                elif (after_dot[0] == "*") and (len(after_dot) > 1) and after_dot.count("->") == 0 and after_dot.count(" ") != 0 and after_dot.count(",") == 0:
                     group_name2 = after_dot[1:after_dot.index(" ")]
                     if(group_name2 in self.groups.keys()) and (user in self.groups[group_name2]):
                         message2 = after_dot[after_dot.index(" ")+1:]
@@ -86,6 +86,8 @@ class Server:
                         cThread.start()
                     else:
                         c.send(bytes(" Group doesn't exist", "utf-8"))
+                elif (after_dot[0] == "*") and (after_dot.count("->") != 1 or after_dot.count(" ") != 0):
+                    c.send(bytes(" "+ bcolors.RED +"[hint] correct usage: *<user1>,<usern> -> <group_name> // *<group_name> message" + bcolors.ENDC, 'utf-8'))
                 elif after_dot[0] is "@" and len(after_dot) == 1:
                     c.send(bytes(" " + str(self.active_usernames), 'utf-8'))
 
@@ -97,8 +99,8 @@ class Server:
                     else:
                         c.send(bytes(" blocked!", 'utf-8'))
 
-                elif after_dot[0] is "@" and len(after_dot) > 1 and(' ' not in after_dot):
-                    c.send(bytes(" [hint] correct usage: @<user> <message> // @ to view users", "utf-8"))
+                elif after_dot[0] is "@" and len(after_dot) > 1 and (' ' not in after_dot):
+                    c.send(bytes(" "+bcolors.RED+"[hint] correct usage: @<user> <message> // @ to view users"+bcolors.ENDC+"\n", "utf-8"))
 
                 elif after_dot[:5] == "!help":
                     c.send(bytes(" private chat: \n\t@<user> <message> // @ to see users\nprivate group: \n\tCREATE: *<user1>,<user2>,...<usern> -> <group_name> \n\tSEND MESSAGE: *<group_name> <message>\n\tADD USER: +<user> <group_name>\n\tREMOVE USER: -<user> <group_name>\nbanning users: ~<user_to_ban> to ban user and ~ again to unban\nlist chats: ls to list // ls <chat_name> to see specific chat\n ","utf-8"))
@@ -136,8 +138,11 @@ class Server:
                     if len(after_dot) > 1 and after_dot[1:] in self.all_usernames:
                         if after_dot[1:] not in self.blocked_users[user]:
                             self.blocked_users[user].append(after_dot[1:])
-                        else:
+                        elif len(after_dot) == 1:
                             self.blocked_users[user].remove(after_dot[1:])
+                        else:
+                            c.send(bytes(" "+bcolors.RED+"[hint] correct usage: ~<user>\n"+bcolors.ENDC, "utf-8"))
+
                     else:
                         c.send(bytes(" "+str(self.blocked_users[user]), "utf-8"))
                 elif after_dot == "ls":
@@ -223,14 +228,11 @@ class Server:
                     open(user+"_tmp.txt", "a").write("\npress !help to see the chat's manual\n\n")
                     self.connections.append(c)
                     c.send(bytes(" "+ str(len(self.active_usernames)) + ' connected clients: ' + ', '.join(self.active_usernames) +'\n', 'utf-8'))
-                     open(user+"_tmp.txt", "a").write(" "+ str(len(self.active_usernames)) + ' connected clients: ' + ', '.join(self.active_usernames) +'\n')
-
-                    
+                    open(user+"_tmp.txt", "a").write(" "+ str(len(self.active_usernames)) + ' connected clients: ' + ', '.join(self.active_usernames) +'\n')
                     for connection in self.connections:
                         if connection is not c:
                             connection.send(bytes(" "+ user +" connected\n", 'utf-8'))
                             open(self.active_usernames[self.connections.index(connection)]+"_tmp.txt").write(" "+ user +" connected\n")
-
                     cThread = threading.Thread(target=self.handler, args=(c, a, user))
                     cThread.daemon = True
                     cThread.start()
@@ -239,7 +241,7 @@ class Server:
                     self.blocked_users[user] = []
                 else:
                     c.send(bytes(" user already connected", 'utf-8'))
-                    open(user+"_tmp.txt", "a").write(
+                    #open(user+"_tmp.txt", "a").write()
                     c.close()
             else:
                 c.send(bytes(" username cannot contain special characters such as ' *@+-~:lsexit'", 'utf-8'))
