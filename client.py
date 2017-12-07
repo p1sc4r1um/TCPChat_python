@@ -11,7 +11,7 @@ def cls():
 
 global port
 global verify
-
+global mainpid
 class Client:
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     user = ""
@@ -20,6 +20,8 @@ class Client:
             message = input("")
             verify = 0
             if message:
+                if message == "exit":
+                    os.kill(mainpid,signal.SIGINT)
                 if (message[0] is "@" or message[0] is "*") and len(message) > 1:
                     split = message[1:].split(",")
                     for name in split:
@@ -30,6 +32,8 @@ class Client:
                         else:
                             verify = 1
                 self.sock.send(bytes(str(verify) + self.user + ": " + message, 'utf-8'))
+
+
 
     def __init__(self, address):
         self.sock.connect((address, port))
@@ -65,7 +69,7 @@ def signal_handler(signal, frame):
     print('Good bye!')
     sys.exit(0)
 
-
+mainpid = os.getpid()
 if (len(sys.argv) == 2):
     try:
         socket.inet_aton(sys.argv[1])

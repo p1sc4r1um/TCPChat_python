@@ -108,7 +108,11 @@ class Server:
                     if (after_dot.count(" ") == 1) and (after_dot[1:after_dot.index(" ")] in self.all_usernames) and (after_dot[after_dot.index(" ")+1:] in self.groups.keys()):
                         if after_dot[1:after_dot.index(" ")] not in self.groups[after_dot[after_dot.index(" ")+1:]] and after_dot[1:after_dot.index(" ")] in self.all_usernames:
                             if user in self.groups[after_dot[after_dot.index(" ")+1:]]:
+                                cThread = threading.Thread(target=self.connectedToGroup, args = (after_dot[after_dot.index(" ")+1:],after_dot[1:after_dot.index(" ")],user))
+                                cThread.daemon = True
+                                cThread.start()
                                 self.groups[after_dot[after_dot.index(" ")+1:]].append(after_dot[1:after_dot.index(" ")])
+
                             else:
                                 c.send(bytes(" group doesn't exist","utf-8"))
                         else:
@@ -165,7 +169,7 @@ class Server:
                         #update user while he was gone
                     else:
                         c.send(bytes(" welcome to IRCHAT, "+ user +"!!\n",'utf-8'))
-                    
+
                         open("users.txt","a").write(user+"\n")
                         print(user + " connected and added to database")
                     c.send(bytes("\npress !help to see the chat's manual\n\n",'utf-8'))
@@ -194,6 +198,12 @@ class Server:
             if self.active_usernames[self.connections.index(connection)] in self.groups[group_name2]:
                 if connection is not c:
                     connection.send(bytes(" "+ user + " to " + str(group_name2) +" -> " + message2,"utf-8"))
+
+    def connectedToGroup(self, group_name,user_added,user_adding):
+        for username in self.active_usernames:
+             if username in self.groups[group_name] and username is not user_adding and username is not user_added:
+                 self.connections[self.active_usernames.index(user)].send(bytes(" user " + user_adding + " added " + user_added + " to group " + group_name, 'utf-8'))
+
 
     def dialogue(self, message2, after_dot):
             for user in self.active_usernames:
