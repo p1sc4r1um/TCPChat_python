@@ -157,25 +157,37 @@ class Server:
             user = c.recv(1024).decode('utf-8')
             file_users = open("users.txt","r").read()
             s = file_users.replace(",","\n").split("\n")
-            if user in s:
-                c.send(bytes(" welcome back, "+ user +"!!\n",'utf-8'))
-                print(user + " connected")
-                #update user while he was gone
+            if user.count(" ") == 0 and user.count("*") == 0 and user.count("@") == 0 and user.count("+") == 0 and user.count("-") == 0 and user.count("~") == 0:
+                if user not in self.active_usernames:
+                    if user in s:
+                        c.send(bytes(" welcome back, "+ user +"!!\n",'utf-8'))
+                        print(user + " connected")
+                        #update user while he was gone
+                    else:
+                        c.send(bytes(" welcome to IRCHAT, "+ user +"!!\n",'utf-8'))
+                    
+                        open("users.txt","a").write(user+"\n")
+                        print(user + " connected and added to database")
+                    c.send(bytes("\npress !help to see the chat's manual\n\n",'utf-8'))
+                    self.connections.append(c)
+                    c.send(bytes(" "+ str(len(self.active_usernames)) + ' connected clients: ' + ', '.join(self.active_usernames) +'\n', 'utf-8'))
 
+                    for connection in self.connections:
+                        if connection is not c:
+                            connection.send(bytes(" \n"+ user +" connected\n", 'utf-8'))
+
+                    cThread = threading.Thread(target=self.handler, args=(c, a, user))
+                    cThread.daemon = True
+                    cThread.start()
+                    self.active_usernames.append(user)
+                    self.all_usernames.append(user)
+                    self.blocked_users[user] = []
+                else:
+                    c.send(bytes(" user already connected", 'utf-8'))
+                    c.close()
             else:
-                c.send(bytes(" welcome to IRCHAT, "+ user +"!!\n",'utf-8'))
-                open("users.txt","a").write(user+"\n")
-                print(user + " connected and added to database")
-
-            self.connections.append(c)
-            c.send(bytes(" "+ str(len(self.active_usernames)) + ' connected clients: ' + ', '.join(self.active_usernames) +'\n', 'utf-8'))
-            cThread = threading.Thread(target=self.handler, args=(c, a, user))
-            cThread.daemon = True
-            cThread.start()
-            self.active_usernames.append(user)
-            self.all_usernames.append(user)
-            self.blocked_users[user] = []
-
+                c.send(bytes(" username cannot contain special characters such as ' *@+-~'", 'utf-8'))
+                c.close()
     def generatePrivateChat(self, group_name2, message2, c, user):
         #user_connection[0][1].send(bytes(" ola","utf-8"))
         for connection in self.connections:

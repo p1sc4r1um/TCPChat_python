@@ -258,3 +258,16 @@
 0jmartinhoj: srfa at 2017-12-06 01:44:55.789242
 0alefe: ~jmartinhoj at 2017-12-06 01:44:59.895171
 1jmartinhoj: @alefe odwoadoawdwa at 2017-12-06 01:45:14.562506
+0user3: olwadwa at 2017-12-07 04:48:24.957132
+0user3: djowajdwa at 2017-12-07 04:48:27.150147
+1user3: @user1 ola at 2017-12-07 04:48:36.915330
+1user3: *user1,user2 -> grupo1 at 2017-12-07 04:49:05.692717
+1user3: *grupo1 ola at 2017-12-07 04:49:09.926741
+0user1: +user4 grupo1 at 2017-12-07 04:49:39.989979
+1user1: *grupo1 ola at 2017-12-07 04:49:46.993350
+0user1: -user4 grupo1 at 2017-12-07 04:49:52.568383
+1user1: *grupo1 ola at 2017-12-07 04:49:56.501833
+0user1: ~user4 at 2017-12-07 04:50:07.036925
+1user1: @user4 ola at 2017-12-07 04:50:12.144219
+0user: !help at 2017-12-07 05:41:37.783276
+0user: !help at 2017-12-07 05:45:23.138336
