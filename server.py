@@ -7,6 +7,7 @@ import os
 import subprocess
 import datetime
 import glob
+from time import sleep
 
 global port
 global verify
@@ -50,7 +51,8 @@ class Server:
             if data:
                 data_str = str(data, 'utf-8')
                 after_dot = data_str[data_str.index(":")+2:]
-                open(user + "_tmp.txt", "a").write(after_dot + "\n")
+                if after_dot[0] != "^":
+                    open(user + "_tmp.txt", "a").write(after_dot + "\n")
                 print(data_str)
                 open("log_file.txt", "a").write(data_str + " at " +str(datetime.datetime.now()) +"\n")
                 verify = data_str[0]
@@ -109,7 +111,7 @@ class Server:
 
                 elif after_dot[:5] == "!help":
                     c.send(bytes(" private chat: \n\t@<user> <message> // @ to see users\nprivate group: \n\tCREATE: *<user1>,<user2>,...<usern> -> <group_name> \n\tSEND MESSAGE: *<group_name> <message>\n\tADD USER: +<user> <group_name>\n\tREMOVE USER: -<user> <group_name>\nbanning users: ~<user_to_ban> to ban user and ~ again to unban\nlist chats: ls to list // ls <chat_name> to see specific chat\n ","utf-8"))
-                    open(user+"_tmp.txt", "a").write("private chat: \n\t@<user> <message> // @ to see users\nprivate group: \n\tCREATE: *<user1>,<user2>,...<usern> -> <group_name> \n\tSEND MESSAGE: *<group_name> <message>\n\tADD USER: +<user> <group_name>\n\tREMOVE USER: -<user> <group_name>\nbanning users: ~<user_to_ban> to ban user and ~ again to unban\nlist chats: ls to list // ls <chat_name> to see specific chat\n \n")
+                    open(user+"_tmp.txt", "a").write("private chat: \n\t@<user> <message> // @ to see users\nprivate group: \n\tCREATE: *<user1>,<user2>,...<usern> -> <group_name> \n\tSEND MESSAGE: *<group_name> <message>\n\tADD USER: +<user> <group_name>\n\tREMOVE USER: -<user> <group_name>\nbanning users: ~<user_to_ban> to ban user and ~ again to unban\nlist chats: ls to list // ls <chat_name> to see specific chat\ntimed messages: ^<time>@ (or *)<user> (or <groupname>) <message>")
                 elif after_dot[0] is "+":
                     if (after_dot.count(" ") == 1) and (after_dot[1:after_dot.index(" ")] in self.all_usernames) and (after_dot[after_dot.index(" ")+1:] in self.groups.keys()):
                         if after_dot[1:after_dot.index(" ")] not in self.groups[after_dot[after_dot.index(" ")+1:]] and after_dot[1:after_dot.index(" ")] in self.all_usernames:
@@ -168,14 +170,15 @@ class Server:
                     filenames = glob.glob("/home/IRC/"+user+"/*.txt")
                     names = []
                     for f in filenames:
-                        names.append(f[f.index("IRC/")+8:f.index(".txt")])
+                        print(f)
+                        names.append(f[f.index("IRC/")+5+len(user):f.index(".txt")])
                     c.send(bytes(" "+str(names), 'utf-8'))
                     open(user + "_tmp.txt", "a").write(str(names)+"\n")
                 elif after_dot[:2] == "ls" and after_dot.count(" ") == 1 and len(after_dot[3:]) > 0:
                     filenames = glob.glob("/home/IRC/"+user+"/*.txt")
                     names = []
                     for f in filenames:
-                        names.append(f[f.index("IRC/")+8:f.index(".txt")])
+                        names.append(f[f.index("IRC/")+5+len(user):f.index(".txt")])
                     for n in names:
                         if n == after_dot[3:]:
                             t = open("/home/IRC/"+user+"/"+n+".txt","r").readlines()
@@ -207,6 +210,26 @@ class Server:
                         if line!="////@£§£½§¬½{[{[.read until here.\n":
                             f.write(line)
                     f.close()
+                elif after_dot[0] == "^" and after_dot.count(" ") != 0:
+                    if after_dot.count("@") == 1:
+                        number = int(after_dot[1:after_dot.index("@")])
+                        username_timed = after_dot[after_dot.index("@")+1:after_dot.index(" ")]
+                        p = []
+                        p.append(username_timed)
+                        p.append(user)
+
+
+                    elif after_dot.count("*") == 1:
+                        number = int(after_dot[1:after_dot.index("*")])
+                        groupname_timed = after_dot[after_dot.index("*")+1:after_dot.index(" ")]
+                        p = self.groups[groupname_timed]
+
+                    m = after_dot[after_dot.index(" "):] # tem espaço
+                    cThread = threading.Thread(target=self.waitToClean, args=(number, p, user, m))
+                    cThread.daemon = True
+                    cThread.start()
+
+
                 else:
                     for connection in self.connections:
                         #change to inactive too && see if user that sends is blocked in other users
@@ -261,7 +284,7 @@ class Server:
                     for connection in self.connections:
                         if connection is not c:
                             connection.send(bytes(" "+ user +" connected\n", 'utf-8'))
-                            open(self.active_usernames[self.connections.index(connection)]+"_tmp.txt", "a").write(" "+ user +" connected\n\n")
+                            open(self.active_usernames[self.connections.index(connection)]+"_tmp.txt", "a").write(user +" connected\n\n")
                     cThread = threading.Thread(target=self.handler, args=(c, a, user))
                     cThread.daemon = True
                     cThread.start()
@@ -303,11 +326,24 @@ class Server:
                         open(user+"_tmp.txt", "a").write(message2[1:message2.index(":")+2]+ after_dot[after_dot.index(" "):] + "\n")
                     break
 
+    def waitToClean(self, time, users, current, msg):
+        for user in users:
+            if user in self.active_usernames and user is not current:
+                self.connections[self.active_usernames.index(user)].send(bytes(msg, 'utf-8'))
+        sleep(time)
+        for user in users:
+            if user in self.active_usernames:
+                self.connections[self.active_usernames.index(user)].send(bytes("¹@£§½¬{[]}1q2w3e4r5t6y",'utf-8'))
+        sleep(0.1)
+        for user in users:
+            f = open(user+"_tmp.txt","r").read()
+            self.connections[self.active_usernames.index(user)].send(bytes(str(f), 'utf-8'))
+
 def signal_handler(signal, frame):
-        print('Good bye!')
-        #self.log_file.close()
-        #file_pairs.close()
-        sys.exit(0)
+    print('Good bye!')
+    #self.log_file.close()
+    #file_pairs.close()
+    sys.exit(0)
 signal.signal(signal.SIGINT, signal_handler)
 server = Server()
 server.run()

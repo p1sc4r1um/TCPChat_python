@@ -1,9 +1,7 @@
-welcome back, ola!!
+welcome back, user1!!
 
 press !help to see the chat's manual
 
 
 0 connected clients: 
-
-oi connected
 

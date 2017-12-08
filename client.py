@@ -50,19 +50,15 @@ class Client:
                 break
             else:
                 if str(data, 'utf-8')[0] == "1":
-                    #os.system("gnome-terminal -- 'bash -c \"python3 client.py 127.0.0.1;exec(bash)\"'")
                     print(str(data, 'utf-8')[1:])
 
                 elif (str(data, 'utf-8')[0] == "0") and len(str(data, 'utf-8')) < 3:
-                    #print(str(data, 'utf-8')[:])
                     print("user doesn't exist")
+                elif(str(data, 'utf-8') == "¹@£§½¬{[]}1q2w3e4r5t6y"):
+                    os.system('cls' if os.name == 'nt' else 'clear')
+
                 else:
                     print(str(data, 'utf-8')[1:])
-                    #message = str(data, 'utf-8')[1:]
-                    #for i in range(len(message), 0, -len(message)+1):
-                    #    cls()
-                    #    print(message[:i])
-                    #    sleep(1)
 
 def signal_handler(signal, frame):
     print('Good bye!')
