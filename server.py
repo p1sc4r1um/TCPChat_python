@@ -43,14 +43,17 @@ class Server:
         self.sock.bind(('0.0.0.0', 0))
         self.sock.listen(1)
         print("Server initialized")
-        if len(open("blocked.txt", "r").read()) > 10:
-            self.blocked_users = ast.literal_eval(open("blocked.txt", "r").read())
-        if len(open("blocked.txt", "r").read()) > 10:
-            self.groups = ast.literal_eval(open("groups.txt", "r").read())
-        self.all_usernames = open("users.txt", "r").read().split("\n")
-        self.all_usernames.remove("")
-        for i in self.all_usernames:
-            self.blocked_users[i] = []
+        if os.path.exists("blocked.txt"):
+            if len(open("blocked.txt", "r+").read()) > 10:
+                self.blocked_users = ast.literal_eval(open("blocked.txt", "r").read())
+        if os.path.exists("groups.txt"):
+            if len(open("groups.txt", "r+").read()) > 10:
+                self.groups = ast.literal_eval(open("groups.txt", "r").read())
+        if os.path.exists("users.txt"):
+            self.all_usernames = open("users.txt", "r").read().split("\n")
+            self.all_usernames.remove("")
+            for i in self.all_usernames:
+                self.blocked_users[i] = []
         print("-database uploaded\n")
     def handler(self, c, a, user):
         while True:
@@ -69,6 +72,7 @@ class Server:
                     if(group_name not in self.groups.keys()):
                         if verify == '1':
                             wanted_connections = []
+                            wanted_connections.append(user)
                             for name in after_dot:
                                 for current in self.all_usernames:
                                     if current == name:
@@ -84,7 +88,6 @@ class Server:
                                         verify_user = 1
                                         break
                                 self.groups[group_name] = wanted_connections
-                                self.groups[group_name].append(user)
                     else:
                         c.send(bytes(" group already exists", 'utf-8'))
                         open(user+"_tmp.txt", "a+").write("group already exists")
@@ -105,14 +108,18 @@ class Server:
                     c.send(bytes(" " + str(self.active_usernames), 'utf-8'))
                     open(user+"_tmp.txt", "a+").write(str(self.active_usernames) + "\n")
                 elif after_dot[0] is "@" and len(after_dot) > 1 and (' ' in after_dot):
-                    if(user not in self.blocked_users[after_dot[1:after_dot.index(" ")]] and after_dot[1:after_dot.index(" ")] not in self.blocked_users[user]):
-                        cThread = threading.Thread(target=self.dialogue, args = (data_str,after_dot))
-                        cThread.daemon = True
-                        cThread.start()
+                    u = after_dot[1:after_dot.index(" ")]
+                    if u in self.all_usernames:
+                        if(user not in self.blocked_users[after_dot[1:after_dot.index(" ")]] and after_dot[1:after_dot.index(" ")] not in self.blocked_users[user]):
+                            cThread = threading.Thread(target=self.dialogue, args = (data_str,after_dot))
+                            cThread.daemon = True
+                            cThread.start()
+                        else:
+                            c.send(bytes(" blocked!", 'utf-8'))
+                            open(user+"_tmp.txt", "a+").write("blocked!\n")
                     else:
-                        c.send(bytes(" blocked!", 'utf-8'))
-                        open(user+"_tmp.txt", "a+").write("blocked!\n")
-
+                        c.send(bytes(" user doesn't exist", 'utf-8'))
+                        open(user+"_tmp.txt", "a+").write("user doesn't exist\n")
                 elif after_dot[0] is "@" and len(after_dot) > 1 and (' ' not in after_dot):
                     c.send(bytes(" "+bcolors.RED+"[hint] correct usage: @<user> <message> // @ to view users"+bcolors.ENDC+"\n", "utf-8"))
                     open(user+"_tmp.txt", "a+").write(bcolors.RED+"[hint] correct usage: @<user> <message> // @ to view users"+bcolors.ENDC+"\n\n")
@@ -144,11 +151,15 @@ class Server:
                 elif after_dot[0] is "-":
                     if (after_dot.count(" ") == 1) and (after_dot[1:after_dot.index(" ")] in self.all_usernames) and (after_dot[after_dot.index(" ")+1:] in self.groups.keys()):
                         if after_dot[1:after_dot.index(" ")] in self.groups[after_dot[after_dot.index(" ")+1:]] and after_dot[1:after_dot.index(" ")] in self.all_usernames:
-                            if user in self.groups[after_dot[after_dot.index(" ")+1:]]:
+                            if user is self.groups[after_dot[after_dot.index(" ")+1:]][0]:
                                 self.groups[after_dot[after_dot.index(" ")+1:]].remove(after_dot[1:after_dot.index(" ")])
+                                cThread = threading.Thread(target=self.removeFromGroup, args = (after_dot[after_dot.index(" ")+1:],after_dot[1:after_dot.index(" ")],user))
+                                cThread.daemon = True
+                                cThread.start()
+
                             else:
-                                c.send(bytes(" group doesn't exist","utf-8"))
-                                open(user+"_tmp.txt", "a+").write("group doesn't exist\n")
+                                c.send(bytes(" group doesn't exist or you don't have permissions","utf-8"))
+                                open(user+"_tmp.txt", "a+").write("group doesn't exist or you don't have permissions\n")
                         else:
                             c.send(bytes(" group doesn't exist", 'utf-8'))
                             open(user+"_tmp.txt", "a+").write("group doesn't exist\n")
@@ -248,8 +259,8 @@ class Server:
                 filenames = glob.glob("/home/IRC/"+ user +"/*.txt")
                 for f in filenames:
                     open(f,"a+").write("////@£§£½§¬½{[{[.read until here.\n")
-                open("groups.txt", "a+").write(str(self.groups))
-                open("groups.txt", "a+").write(str(self.blocked_users))
+                open("groups.txt", "w").write(str(self.groups))
+                open("blocked.txt", "w").write(str(self.blocked_users))
                 print(user + " disconnected")
                 os.remove(user+"_tmp.txt")
                 self.active_usernames.remove(self.active_usernames[self.connections.index(c)])
@@ -324,17 +335,22 @@ class Server:
     def connectedToGroup(self, group_name,user_added,user_adding):
         for username in self.active_usernames:
             if username in self.groups[group_name]:
-                self.connections[self.active_usernames.index(username)].send(bytes(" user "+bcolors.BOLD + user_adding + bcolors.ENDC +" added "+ bcolors.BOLD + bcolors.YELLOW  + user_added + bcolors.ENDC +" to group " + bcolors.BOLD +group_name + bcolors.ENDC, 'utf-8'))
-
+                self.connections[self.active_usernames.index(username)].send(bytes(" user "+bcolors.BOLD + user_adding + bcolors.ENDC +" added "+ bcolors.BOLD + bcolors.YELLOW  + user_added + bcolors.ENDC +" to group " + bcolors.BOLD +group_name + bcolors.ENDC + "\n", 'utf-8'))
+                open(username + "_tmp.txt", "a").write("user "+bcolors.BOLD + user_adding + bcolors.ENDC +" added "+ bcolors.BOLD + bcolors.YELLOW  + user_added + bcolors.ENDC +" to group " + bcolors.BOLD +group_name + bcolors.ENDC)
+    def removeFromGroup(self, group_name,user_added,user_adding):
+        for username in self.active_usernames:
+            if username in self.groups[group_name]:
+                self.connections[self.active_usernames.index(username)].send(bytes(" user "+bcolors.BOLD + user_adding + bcolors.ENDC +" removed "+ bcolors.BOLD + bcolors.YELLOW  + user_added + bcolors.ENDC +" from group " + bcolors.BOLD +group_name + bcolors.ENDC, 'utf-8')) 
+                open(username + "_tmp.txt", "a").write("user "+bcolors.BOLD + user_adding + bcolors.ENDC +" removed "+ bcolors.BOLD + bcolors.YELLOW  + user_added + bcolors.ENDC +" to group " + bcolors.BOLD +group_name + bcolors.ENDC + "\n")
     def dialogue(self, message2, after_dot):
-            for user in self.all_usernames:
-                if str(after_dot[1:after_dot.index(" ")]) == str(user):
-                    open("/home/IRC/"+user+"/@"+message2[1:message2.index(":")] + ".txt", "a+").write(message2[1:message2.index(":")+2]+ after_dot[after_dot.index(" "):]+"\n")
-                    open("/home/IRC/"+message2[1:message2.index(":")]+"/@"+ user + ".txt", "a+").write(after_dot[1+after_dot.index(" "):]+"\n")
-                    if(user in self.active_usernames):
-                        self.connections[self.active_usernames.index(user)].send(bytes(" " +bcolors.BOLD + message2[1:message2.index(":")+2]+ bcolors.ENDC  + after_dot[after_dot.index(" ")+1:], 'utf-8'))
-                        open(user+"_tmp.txt", "a+").write(bcolors.BOLD + message2[1:message2.index(":")+2]+ bcolors.ENDC  + after_dot[after_dot.index(" ")+1:] + "\n")
-                    break
+        for user in self.all_usernames:
+            if str(after_dot[1:after_dot.index(" ")]) == str(user):
+                open("/home/IRC/"+user+"/@"+message2[1:message2.index(":")] + ".txt", "a+").write(message2[1:message2.index(":")+2]+ after_dot[after_dot.index(" "):]+"\n")
+                open("/home/IRC/"+message2[1:message2.index(":")]+"/@"+ user + ".txt", "a+").write(after_dot[1+after_dot.index(" "):]+"\n")
+                if(user in self.active_usernames):
+                    self.connections[self.active_usernames.index(user)].send(bytes(" " +bcolors.BOLD + message2[1:message2.index(":")+2]+ bcolors.ENDC  + after_dot[after_dot.index(" ")+1:], 'utf-8'))
+                    open(user+"_tmp.txt", "a+").write(bcolors.BOLD + message2[1:message2.index(":")+2]+ bcolors.ENDC  + after_dot[after_dot.index(" ")+1:] + "\n")
+                break
 
     def waitToClean(self, time, users, current, msg):
         for user in users:
@@ -350,8 +366,8 @@ class Server:
             self.connections[self.active_usernames.index(user)].send(bytes(" " + str(f), 'utf-8'))
 
     def signal_handler(self, signal, frame):
-        open("groups.txt", "a+").write(str(self.groups))
-        open("groups.txt", "a+").write(str(self.blocked_users))
+        open("groups.txt", "w").write(str(self.groups))
+        open("blocked.txt", "w").write(str(self.blocked_users))
         print('\nClosing server')
         #self.log_file.close()
         #file_pairs.close()

@@ -19,6 +19,7 @@ class Client:
     def sendMsg(self):
         while True:
             message = input("")
+            
             verify = 0
             if message:
                 if message == "exit":
@@ -38,7 +39,7 @@ class Client:
         self.sock.connect((address, port))
         print("connected\n")
         self.user = input("username: ")
-
+        os.system("reset")
 
         self.sock.send(bytes(self.user, 'utf-8'))
         iThread = threading.Thread(target = self.sendMsg)

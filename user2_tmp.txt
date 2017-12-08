@@ -1,0 +1,10 @@
+welcome back, user2!!
+
+press [1m!help[0m to see the chat's manual
+
+
+1 connected clients: [92muser1[0m
+
+[1muser1: [0mola
+user1 connected
+

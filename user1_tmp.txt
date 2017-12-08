@@ -1,0 +1,15 @@
+welcome back, user1!!
+
+press [1m!help[0m to see the chat's manual
+
+
+1 connected clients: [92muser2[0m
+
+ls
+ls @user1
+['user1:  ola\n', 'ola\n', '////@£§£½§¬½{[{[.read until here.\n', '////@£§£½§¬½{[{[.read until here.\n']
+['user1:  ola\n', 'ola\n', '////@£§£½§¬½{[{[.read until here.\n', '////@£§£½§¬½{[{[.read until here.\n']
+ls @user2
+['olaaaaa\n', '////@£§£½§¬½{[{[.read until here.\n', 'ola\n', '////@£§£½§¬½{[{[.read until here.\n']
+['olaaaaa\n', '////@£§£½§¬½{[{[.read until here.\n', 'ola\n', '////@£§£½§¬½{[{[.read until here.\n']
+@fzhzfdhdfhzdfhzdfhzdf ddd

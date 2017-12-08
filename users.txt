@@ -1,7 +1,4 @@
-
 user1
 user2
-jose
-rita
-joao
-user3
+ola
+user
