@@ -42,12 +42,16 @@ class Server:
     def __init__(self):
         self.sock.bind(('0.0.0.0', 0))
         self.sock.listen(1)
-        self.blocked_users = ast.literal_eval(open("blocked.txt", "r").read())
-        self.groups = ast.literal_eval(open("groups.txt", "r").read())
+        print("Server initialized")
+        if len(open("blocked.txt", "r").read()) > 10:
+            self.blocked_users = ast.literal_eval(open("blocked.txt", "r").read())
+        if len(open("blocked.txt", "r").read()) > 10:
+            self.groups = ast.literal_eval(open("groups.txt", "r").read())
         self.all_usernames = open("users.txt", "r").read().split("\n")
         self.all_usernames.remove("")
         for i in self.all_usernames:
             self.blocked_users[i] = []
+        print("-database uploaded\n")
     def handler(self, c, a, user):
         while True:
             data = c.recv(1024)
@@ -64,25 +68,29 @@ class Server:
                 if (after_dot[0] == "*") and (len(after_dot) > 1) and (',' in after_dot) and after_dot.count("->") == 1 and len(after_dot[after_dot.index("->")+3:]) > 2:
                     group_name = after_dot[after_dot.index('->')+3:]
                     after_dot = after_dot[1:after_dot.index('->')-1].split(",")
-                    if verify == '1':
-                        wanted_connections = []
-                        for name in after_dot:
-                            for current in self.all_usernames:
-                                if current == name:
-                                    wanted_connections.append(current)
-                                    verify_user = 1
-                                    break
-                        if verify_user == 0:
-                            c.send(bytes('0', 'utf-8'))
-                        else:
-                            for current in user_connection:
-                                if current == user:
-                                    wanted_connections.append(current)
-                                    verify_user = 1
-                                    break
-                            self.groups[group_name] = wanted_connections
-                            self.groups[group_name].append(user)
-                            print(self.groups)
+                    if(group_name not in self.groups.keys()):
+                        if verify == '1':
+                            wanted_connections = []
+                            for name in after_dot:
+                                for current in self.all_usernames:
+                                    if current == name:
+                                        wanted_connections.append(current)
+                                        verify_user = 1
+                                        break
+                            if verify_user == 0:
+                                c.send(bytes('0', 'utf-8'))
+                            else:
+                                for current in user_connection:
+                                    if current == user:
+                                        wanted_connections.append(current)
+                                        verify_user = 1
+                                        break
+                                self.groups[group_name] = wanted_connections
+                                self.groups[group_name].append(user)
+                                print(self.groups)
+                    else:
+                        c.send(bytes(" group already exists", 'utf-8'))
+                        open(user+"_tmp.txt", "a").write("group already exists")
                 elif (after_dot[0] == "*") and (len(after_dot) > 1) and after_dot.count("->") == 0 and after_dot.count(" ") != 0 and after_dot.count(",") == 0:
                     group_name2 = after_dot[1:after_dot.index(" ")]
                     if(group_name2 in self.groups.keys()) and (user in self.groups[group_name2]):
@@ -91,8 +99,8 @@ class Server:
                         cThread.daemon = True
                         cThread.start()
                     else:
-                        c.send(bytes(" Group doesn't exist", "utf-8"))
-                        open(user+"_tmp.txt", "a").write("Group doesn't exist")
+                        c.send(bytes(" group doesn't exist", "utf-8"))
+                        open(user+"_tmp.txt", "a").write("group doesn't exist")
                 elif (after_dot[0] == "*") and (after_dot.count("->") != 1 or after_dot.count(" ") != 0):
                     c.send(bytes(" "+ bcolors.RED +"[hint] correct usage: *<user1>,<usern> -> <group_name> // *<group_name> message" + bcolors.ENDC, 'utf-8'))
                     open(user+"_tmp.txt", "a").write(bcolors.RED +"[hint] correct usage: *<user1>,<usern> -> <group_name> // *<group_name> message" + bcolors.ENDC+"\n")
@@ -236,14 +244,14 @@ class Server:
                     for connection in self.connections:
                         #change to inactive too && see if user that sends is blocked in other users
                         if(connection is not c and self.active_usernames[self.connections.index(connection)] not in self.blocked_users[user]) and user not in self.blocked_users[self.active_usernames[self.connections.index(connection)]]:
-                            connection.send(bytes(" " + bcolors.BLUE + "[GLOBAL] " + bcolors.ENDC +  data_str[1:], "utf-8"))
-                            open(self.active_usernames[self.connections.index(connection)] + "_tmp.txt", "a").write(bcolors.BLUE + "[GLOBAL] " + bcolors.ENDC + data_str[1:] + "\n")
+                            connection.send(bytes(" " + bcolors.BLUE + "[GLOBAL] " + bcolors.ENDC + bcolors.UNDERLINE + data_str[1:len(user)+1] + bcolors.ENDC + data_str[len(user)+1:], "utf-8"))
+                            open(self.active_usernames[self.connections.index(connection)] + "_tmp.txt", "a").write(bcolors.BLUE + "[GLOBAL] " + bcolors.ENDC + bcolors.UNDERLINE + data_str[1:len(user)+1] + bcolors.ENDC + data_str[len(user)+1:] + "\n")
             else:
                 filenames = glob.glob("/home/IRC/"+ user +"/*.txt")
                 for f in filenames:
                     open(f,"a").write("////@£§£½§¬½{[{[.read until here.\n")
-                open("groups.txt", "a").write(self.groups)
-                open("groups.txt", "a").write(self.blocked_users)
+                open("groups.txt", "a").write(str(self.groups))
+                open("groups.txt", "a").write(str(self.blocked_users))
                 print(user + " disconnected")
                 os.remove(user+"_tmp.txt")
                 self.active_usernames.remove(self.active_usernames[self.connections.index(c)])
@@ -262,7 +270,7 @@ class Server:
                     if user in s:
                         c.send(bytes(" welcome back, "+ user +"!!\n",'utf-8'))
                         open(user + "_tmp.txt", "a").write("welcome back, "+ user +"!!\n\n")
-                        print(user + " connected")
+                        print(user + " connected from "+str(a[0])+":"+str(a[1]))
                         filenames = glob.glob("/home/IRC/" + user + "/*.txt")
                         for f in filenames:
                             lines = open(f, "r").readlines()
@@ -343,13 +351,13 @@ class Server:
             f = open(user+"_tmp.txt","r").read()
             self.connections[self.active_usernames.index(user)].send(bytes(" " + str(f), 'utf-8'))
 
-def signal_handler(signal, frame):
-    open("groups.txt", "a").write(self.groups)
-    open("groups.txt", "a").write(self.blocked_users)
-    print('Good bye!')
-    #self.log_file.close()
-    #file_pairs.close()
-    sys.exit(0)
-signal.signal(signal.SIGINT, signal_handler)
+    def signal_handler(self, signal, frame):
+        open("groups.txt", "a").write(str(self.groups))
+        open("groups.txt", "a").write(str(self.blocked_users))
+        print('\nClosing server')
+        #self.log_file.close()
+        #file_pairs.close()
+        sys.exit(0)
 server = Server()
+signal.signal(signal.SIGINT, server.signal_handler)
 server.run()

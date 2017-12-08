@@ -1,0 +1,27 @@
+welcome to IRCHAT, user3!!
+
+press !help to see the chat's manual
+
+
+2 connected clients: user1, user2
+
+*user1,user2 -> group
+*user1,user2 -> group
+group already exists[94m[GLOBAL] [0muser2: odwaodwa
+[94m[GLOBAL] [0muser2: dpwapodwa
+[94m[GLOBAL] [0muser2: dwaoodwakook
+[94m[GLOBAL] [0muser2: dowakodkwa
+[94m[GLOBAL] [0muser2: odwakodkwa
+[94m[GLOBAL] [0muser2: odkwaokdwadwaidwad
+[94m[GLOBAL] [0muser2: wa
+[94m[GLOBAL] [0muser2: dw
+[94m[GLOBAL] [0muser2: aw
+[94m[GLOBAL] [0muser2: d
+[94m[GLOBAL] [0muser2: wa
+[94m[GLOBAL] [0muser2: dwa
+[94m[GLOBAL] [0muser2: dwa
+[94m[GLOBAL] [0muser2: d
+[94m[GLOBAL] [0muser2: wa
+[94m[GLOBAL] [0muser2: dw
+[94m[GLOBAL] [0muser2: a
+[94m[GLOBAL] [0muser2: dwa
