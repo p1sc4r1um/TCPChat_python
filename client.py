@@ -7,7 +7,7 @@ import os
 import subprocess
 from time import sleep
 def cls():
-    os.system('cls' if os.name == 'nt' else 'clear')
+    os.system('reset')
 
 global port
 global verify
@@ -55,7 +55,7 @@ class Client:
                 elif (str(data, 'utf-8')[0] == "0") and len(str(data, 'utf-8')) < 3:
                     print("user doesn't exist")
                 elif(str(data, 'utf-8') == "¹@£§½¬{[]}1q2w3e4r5t6y"):
-                    os.system('cls' if os.name == 'nt' else 'clear')
+                    cls()
 
                 else:
                     print(str(data, 'utf-8')[1:])

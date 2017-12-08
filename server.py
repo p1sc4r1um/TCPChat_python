@@ -7,6 +7,7 @@ import os
 import subprocess
 import datetime
 import glob
+import ast
 from time import sleep
 
 global port
@@ -41,6 +42,8 @@ class Server:
     def __init__(self):
         self.sock.bind(('0.0.0.0', 0))
         self.sock.listen(1)
+        self.blocked_users = ast.literal_eval(open("blocked.txt", "r").read())
+        self.groups = ast.literal_eval(open("groups.txt", "r").read())
         self.all_usernames = open("users.txt", "r").read().split("\n")
         self.all_usernames.remove("")
         for i in self.all_usernames:
@@ -157,15 +160,14 @@ class Server:
                     if len(after_dot) > 1 and after_dot[1:] in self.all_usernames:
                         if after_dot[1:] not in self.blocked_users[user]:
                             self.blocked_users[user].append(after_dot[1:])
-                        elif len(after_dot) == 1:
+                        elif after_dot[1:] in self.blocked_users[user]:
                             self.blocked_users[user].remove(after_dot[1:])
                         else:
                             c.send(bytes(" "+bcolors.RED+"[hint] correct usage: ~<user>\n"+bcolors.ENDC, "utf-8"))
-                            open(user+"_tmp.txt" + "a").write(bcolors.RED+"[hint] correct usage: ~<user>\n"+bcolors.ENDC+"\n")
-
+                            open(user+"_tmp.txt", "a").write(bcolors.RED+"[hint] correct usage: ~<user>\n"+bcolors.ENDC+"\n")
                     else:
                         c.send(bytes(" "+str(self.blocked_users[user]), "utf-8"))
-                        open(user + "_tmp.txt").write(str(self.blocked_users[user]) + "\n")
+                        open(user + "_tmp.txt", "a").write(str(self.blocked_users[user]) + "\n")
                 elif after_dot == "ls":
                     filenames = glob.glob("/home/IRC/"+user+"/*.txt")
                     names = []
@@ -201,7 +203,7 @@ class Server:
                                     boolean = 1
                                 if boolean == 1:
                                     c.send(bytes(" " + str(i), 'utf-8'))
-                                    open(user + "_tmp.txt" + "a").write(str(i)+"\n")
+                                    open(user + "_tmp.txt", "a").write(str(i)+"\n")
                     f = open("/home/IRC/"+user+"/"+n+".txt","r")
                     lines = f.readlines()
                     f.close()
@@ -234,12 +236,14 @@ class Server:
                     for connection in self.connections:
                         #change to inactive too && see if user that sends is blocked in other users
                         if(connection is not c and self.active_usernames[self.connections.index(connection)] not in self.blocked_users[user]) and user not in self.blocked_users[self.active_usernames[self.connections.index(connection)]]:
-                            connection.send(bytes(" [GLOBAL] " + data_str[1:], "utf-8"))
-                            open(self.active_usernames[self.connections.index(connection)], "a").write("[GLOBAL] " + data_str[1:] + "\n")
+                            connection.send(bytes(" " + bcolors.BLUE + "[GLOBAL] " + bcolors.ENDC +  data_str[1:], "utf-8"))
+                            open(self.active_usernames[self.connections.index(connection)] + "_tmp.txt", "a").write(bcolors.BLUE + "[GLOBAL] " + bcolors.ENDC + data_str[1:] + "\n")
             else:
                 filenames = glob.glob("/home/IRC/"+ user +"/*.txt")
                 for f in filenames:
                     open(f,"a").write("////@£§£½§¬½{[{[.read until here.\n")
+                open("groups.txt", "a").write(self.groups)
+                open("groups.txt", "a").write(self.blocked_users)
                 print(user + " disconnected")
                 os.remove(user+"_tmp.txt")
                 self.active_usernames.remove(self.active_usernames[self.connections.index(c)])
@@ -266,7 +270,7 @@ class Server:
                                 if lines[len(lines)-1] != "////@£§£½§¬½{[{[.read until here.\n":
                                     c.send(bytes("\n"+bcolors.RED + "you've got new messages in " + bcolors.BOLD +f[f.index(user)+len(user)+1:len(f)-4]+ bcolors.ENDC + bcolors.RED +" [type ls " + f[f.index(user)+len(user)+1:len(f)-4]+" to see]"+bcolors.ENDC+"\n",'utf-8'))
                                     open(user + "_tmp.txt", "a").write(bcolors.RED + "you've got new messages in " + bcolors.BOLD +f[f.index(user)+len(user)+1:len(f)-4]+ bcolors.ENDC + bcolors.RED +" [type ls " + f[f.index(user)+len(user)+1:len(f)-4]+" to see]"+bcolors.ENDC+"\n\n")
-                                    
+
                     else:
                         c.send(bytes(" welcome to IRCHAT, "+ user +"!!\n",'utf-8'))
                         open(user + "_tmp.txt", "a").write("welcome to IRCHAT, "+ user +"!!\n\n")
@@ -334,12 +338,14 @@ class Server:
         for user in users:
             if user in self.active_usernames:
                 self.connections[self.active_usernames.index(user)].send(bytes("¹@£§½¬{[]}1q2w3e4r5t6y",'utf-8'))
-        sleep(0.1)
+        sleep(0.05)
         for user in users:
             f = open(user+"_tmp.txt","r").read()
-            self.connections[self.active_usernames.index(user)].send(bytes(str(f), 'utf-8'))
+            self.connections[self.active_usernames.index(user)].send(bytes(" " + str(f), 'utf-8'))
 
 def signal_handler(signal, frame):
+    open("groups.txt", "a").write(self.groups)
+    open("groups.txt", "a").write(self.blocked_users)
     print('Good bye!')
     #self.log_file.close()
     #file_pairs.close()
